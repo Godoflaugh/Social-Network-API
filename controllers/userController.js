@@ -13,7 +13,7 @@ module.exports = {
   },
 
   //Get route for single use by it's _id and populate thought and friend data
-  getsingleUser(req, res) {
+  getSingleUser(req, res) {
     User.findOne({ _id: req.params.userId })
       .select('-__v')
       .then((oneUser) =>

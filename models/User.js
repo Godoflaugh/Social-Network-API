@@ -1,9 +1,9 @@
-const { Schema, Model } = require('mongoose')
+const { Schema, model } = require('mongoose')
 
 //Schema to create a User model
 const userSchema = new Schema(
   {
-    userName: {
+    username: {
       type: String,
       unique: true,
       required: true,
@@ -14,7 +14,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      match: [/^([a-z0-9./_-]+)@([a-zA-Z0-9.]+)\.([a-z0-9\.]{2,6})$/, 'Enter a valid E-mail address.'],
+      match: [/^([a-zA-Z0-9./_-]+)@([a-zA-Z0-9.]+)\.([a-z0-9\.]{2,6})$/, 'Enter a valid E-mail address.'],
     },
 
     thoughts: [
@@ -49,6 +49,6 @@ userSchema
   })
 
 //Initialize the model
-const user = model('user', userSchema)
+const User = model('user', userSchema)
 
 module.exports = User
