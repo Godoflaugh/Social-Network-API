@@ -28,51 +28,56 @@ module.exports = {
     Thought.create(req.body)
       .then((data) => {
         return User.findOneAndUpdate(
-          { username: username },
-          { $addToSet: { thoughts: _id } },
-          { runValidators: true, new: true }
+          { username: req.body.username },
+          { $push: { thoughts: data._id } },
+          { new: true, runValidators: true }
         )
-          .then((user) =>
-            !user
-              ? res.status(404).json({ message: 'No user found' })
-              : res.json("Thought created!")
-          )
-          .catch((err) => res.status(500).json(err))
-
+      })
+      .then((user) => {
+        if (!user) {
+          res.status(404).json({ message: "No user found with this Id" })
+          return
+        }
+        res.json(user)
+      })
+      .catch(err => {
+        res.status(400).json(err)
       })
   },
 
   // PUT route to update a thought by it's _id
   updateThought(req, res) {
+    console.log(req.params)
     Thought.findOneAndUpdate(
-      { _id: req.params.thoughtId },
-      { set: req.body },
+      { _id: req.params.id },
+      { $set: req.body },
       { runValidators: true, new: true }
     )
       .then((thoughts) =>
         !thoughts
           ? res.status(404).json({ message: 'No thought found by that Id' })
-          : res.json(thoughts)
+          : res.json(thoughts).json({ message: "Thought updated" })
       )
       .catch(err => res.status(500).json(err))
   },
 
   // DELETE to remove a thought by it's _id
   removeThought(req, res) {
-    Thought.findOneAndRemove({ _id: req.params.thoughtId })
+    Thought.findOneAndRemove({ _id: req.params.id })
       .then((removedThought) =>
         !removedThought
           ? res.status(404).json({ message: 'No thought found by that Id' })
+          //Search the array and remove the thought, before we had it as searching for a user ID which we did not pass that's why it was hitting the res.status(404)
           : User.findOneAndUpdate(
-            { _id: req.params.userId },
-            { $pull: { thoughts: req.params.thoughtId } },
+            { thoughts: req.params.id },
+            { $pull: { thoughts: req.params.id } },
             { new: true }
           )
       )
       .then((user) =>
         !user
           ? res.status(404).json({ message: 'Thought could not be removed from user' })
-          : res.json({ message: 'Thought deleted' })
+          : res.json(user).json({ message: 'Thought deleted' })
       )
       .catch(err => res.status(500).json(err))
 
@@ -100,7 +105,7 @@ module.exports = {
   deleteReaction(req, res) {
     Thought.findOneAndUpdate(
       { _id: req.params.thoughtId },
-      { $pull: { reactions: req.params.reactionId } },
+      { $pull: { reactions: { reactionId: req.params.reactionId } } },
       { runValidators: true, new: true }
     )
       .then((removedReactions) =>

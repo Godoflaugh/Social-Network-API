@@ -48,6 +48,8 @@ module.exports = {
 
   // DELETE route to remove a user by  it's _id
   //TODO Ask quinton about this removal.
+  //Causes a long time, have to cancel to finish the request
+
   deleteUser(req, res) {
     User.findOneAndRemove({ _id: req.params.userId })
       .then((removedStudent) =>
@@ -58,6 +60,7 @@ module.exports = {
             { $pull: { users: req.params.userId } },
             { runValidators: true, new: true }
           )
+            .then(res.status(200).json({ message: "User Deleted" }))
       )
       .catch(err => res.status(500).json(err))
   },
@@ -68,18 +71,20 @@ module.exports = {
   //POST Route to add a friend to the users friend list
   addFriend(req, res) {
     console.log('Adding a friend! Congrats!')
-    console.log(req.body)
-    User.FindOneAndUpdate(
+
+    User.findOneAndUpdate(
       { _id: req.params.userId },
-      { $set: { friends: req.params.friendId } },
+      { $push: { friends: req.params.friendId } },
       { new: true },
     )
-      .then((newFriend) =>
-        !newFriend
-          ? res.status(404).json({ message: 'Could not add friend to that User Id. Try again' })
-          : res.json(newFriend)
-      )
-      .cath(err => res.status(500).json(err))
+      .then((newFriend) => {
+        if (!newFriend) {
+          res.status(404).json({ message: 'Could not add friend to that User Id. Try again' })
+          return
+        }
+        res.json(newFriend)
+      })
+      .catch(err => res.status(500).json(err))
   },
 
 
@@ -87,7 +92,7 @@ module.exports = {
 
   deleteFriend(req, res) {
     console.log('Getting rid of a friend')
-    User.FineOneAndUpdate(
+    User.findOneAndUpdate(
       { _id: req.params.userId },
       { $pull: { friends: req.params.friendId } },
       { new: true }
